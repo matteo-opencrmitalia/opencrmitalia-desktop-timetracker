@@ -1,0 +1,742 @@
+{
+	"info": {
+		"_postman_id": "standardserver-graphql-api",
+		"name": "StandardServer GraphQL API",
+		"description": "Complete GraphQL API collection for vTiger StandardServer extension",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:19080",
+			"type": "string"
+		},
+		{
+			"key": "graphql_endpoint",
+			"value": "{{base_url}}/public/graphql/index.php",
+			"type": "string"
+		},
+		{
+			"key": "token_endpoint",
+			"value": "{{base_url}}/public/graphql/token.php",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": "admin",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "admin",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Get Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.data && response.data.login && response.data.login.access_token) {",
+									"    const token = response.data.login.access_token;",
+									"    pm.environment.set('access_token', token);",
+									"    pm.collectionVariables.set('access_token', token);",
+									"    console.log('Token impostato:', token.substring(0, 50) + '...');",
+									"} else {",
+									"    console.log('Errore: token non trovato nella risposta', response);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation { login(username: \\\"{{username}}\\\", password: \\\"{{password}}\\\") { access_token } }\"\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "File Operations",
+			"item": [
+				{
+					"name": "File Upload",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "query",
+									"value": "mutation FileUploadMutation {\n    fileUpload {\n        file {\n            name,\n            mimetype,\n            url\n        }\n    }\n}",
+									"type": "text"
+								},
+								{
+									"key": "upload",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "File Upload (GraphQL Multipart)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "operations",
+									"value": "{\n    \"query\": \"mutation FileUploadMutation { fileUpload { file { name, mimetype, url } } }\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "map",
+									"value": "{\"1\":[\"variables.upload\"]}",
+									"type": "text"
+								},
+								{
+									"key": "1",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Document Operations",
+			"item": [
+				{
+					"name": "Document Save",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "query",
+									"value": "mutation DocumentSaveMutation {\n    DocumentSave(document: {title: \"My Document\"}) {\n        document {\n            title\n            url\n        }\n    }\n}",
+									"type": "text"
+								},
+								{
+									"key": "filename",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Comment Operations",
+			"item": [
+				{
+					"name": "Comment Save with Attachments",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "query",
+									"value": "mutation CommentSaveMutation($relatedId: String!) {\n    commentSave(\n        comment: {\n            content: \"Test comment with attachments\"\n            relatedId: $relatedId\n        }\n    ) {\n        comment {\n            content\n            attachments {\n                id\n                name\n                mimetype\n                size\n                url\n            }\n        }\n    }\n}",
+									"type": "text"
+								},
+								{
+									"key": "variables",
+									"value": "{\n    \"relatedId\": \"10\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "filename[]",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "filename[]",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Comment Save (GraphQL Multipart)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "operations",
+									"value": "{\n    \"query\": \"mutation CommentSaveMutation($relatedId: String!) { commentSave(comment: { content: \\\"Test comment with multipart files\\\", relatedId: $relatedId }) { comment { content attachments { id name mimetype size url } } } }\",\n    \"variables\": {\n        \"relatedId\": \"10\"\n    }\n}",
+									"type": "text"
+								},
+								{
+									"key": "map",
+									"value": "{\"1\":[\"variables.filename.0\"],\"2\":[\"variables.filename.1\"]}",
+									"type": "text"
+								},
+								{
+									"key": "1",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "2",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Record Operations",
+			"item": [
+				{
+					"name": "Record List Query",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query RecordListQuery($module: String!) { recordList(module: $module) { records { id fields { name rawValue } } totalCount totalPages } }\",\n    \"variables\": {\n        \"module\": \"Contacts\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Record Detail Query",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query RecordDetailQuery($crmid: Int!) { recordDetail(crmid: $crmid) { blocks { name fields { name rawValue } } } }\",\n    \"variables\": {\n        \"crmid\": 12\n    }\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Record Save Mutation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"mutation RecordSaveMutation($module: String!, $fields: [_Field!]!) { recordSave(fields: $fields, module: $module) { id module } }\",\n    \"variables\": {\n        \"module\": \"Contacts\",\n        \"fields\": [\n            {\"name\": \"firstname\", \"rawValue\": \"John\"},\n            {\"name\": \"lastname\", \"rawValue\": \"Doe\"},\n            {\"name\": \"email\", \"rawValue\": \"john.doe@example.com\"},\n            {\"name\": \"assigned_user_id\", \"rawValue\": \"1\"}\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Schema Introspection",
+			"item": [
+				{
+					"name": "Basic Schema Info",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query { __schema { queryType { name } mutationType { name } } }\"\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "All Available Queries",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query { __schema { queryType { fields { name description } } } }\"\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "All Available Mutations",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query { __schema { mutationType { fields { name description } } } }\"\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Schema Introspection",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query IntrospectionQuery { __schema { queryType { name fields { name description args { name type { name kind ofType { name kind } } defaultValue } } } mutationType { name fields { name description args { name type { name kind ofType { name kind } } defaultValue } } } types { kind name description fields { name description type { name kind ofType { name kind } } } } } }\"\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "System Queries",
+			"item": [
+				{
+					"name": "Version",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query { version }\"\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "System Info",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query { system }\"\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Current User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query { currentUser { id username firstName lastName email } }\"\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Languages",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query { languages { module labels { key label } } }\"\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Module Operations",
+			"item": [
+				{
+					"name": "Modules List",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query ModulesListQuery { modulesList { modules { name label } } }\"\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Module Detail",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query ModuleDetailQuery($module: String!) { moduleDetail(module: $module) { name blocks { name fields { label name maximumLength editable required type typeIcon } } } }\",\n    \"variables\": {\n        \"module\": \"Contacts\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Advanced Mutations",
+			"item": [
+				{
+					"name": "Records Delete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"mutation RecordsDeleteMutation($crmids: [Int!]!) { recordsDelete(crmids: $crmids) { success deletedIds } }\",\n    \"variables\": {\n        \"crmids\": [239]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Stars Save",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"mutation StarsSaveMutation($crmids: [Int!]!, $starred: Boolean!) { starsSave(crmids: $crmids, starred: $starred) { success starredIds } }\",\n    \"variables\": {\n        \"crmids\": [12],\n        \"starred\": true\n    }\n}"
+						},
+						"url": {
+							"raw": "{{graphql_endpoint}}",
+							"host": [
+								"{{graphql_endpoint}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

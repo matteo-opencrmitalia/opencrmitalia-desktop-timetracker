@@ -1,0 +1,74 @@
+{
+  "name": "crm-desktop-app",
+  "version": "1.0.0",
+  "description": "CRM Desktop Application built with Vue 3, Vuetify and Electron",
+  "main": "dist-electron/main.js",
+  "homepage": "./",
+  "scripts": {
+    "dev": "vite",
+    "start": "./scripts/start-dev.sh",
+    "build": "npm run build:web && npm run build:electron-main && electron-builder",
+    "build:web": "vue-tsc && vite build",
+    "build:electron-main": "node scripts/build-electron.js",
+    "build:electron": "electron-builder",
+    "electron": "wait-on tcp:5173 --timeout 60000 && npm run build:electron-main && cross-env NODE_ENV=development electron dist-electron/main.js",
+    "electron:serve": "concurrently -k \"npm run dev\" \"npm run electron\"",
+    "electron:pack": "npm run build:web && npm run build:electron-main && electron-builder --dir",
+    "electron:dist": "npm run build:web && npm run build:electron-main && electron-builder",
+    "postinstall": "electron-builder install-app-deps",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "crm",
+    "desktop",
+    "vue",
+    "electron",
+    "vuetify"
+  ],
+  "author": "",
+  "license": "ISC",
+  "build": {
+    "appId": "com.yourcompany.crm-desktop-app",
+    "productName": "CRM Desktop App",
+    "directories": {
+      "output": "dist-installer"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.business"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
+  "dependencies": {
+    "@apollo/client": "^3.13.9",
+    "@mdi/font": "^7.4.47",
+    "@vitejs/plugin-vue": "^4.6.2",
+    "@vueup/vue-quill": "^1.2.0",
+    "electron": "^25.9.8",
+    "electron-builder": "^24.13.3",
+    "graphql": "^16.11.0",
+    "quill": "^2.0.3",
+    "sqlite3": "^5.1.7",
+    "typescript": "^5.9.2",
+    "vite": "^4.5.14",
+    "vue": "^3.5.18",
+    "vuetify": "^3.9.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.2.0",
+    "concurrently": "^9.2.0",
+    "cross-env": "^10.0.0",
+    "esbuild": "^0.25.8",
+    "vue-tsc": "^3.0.5",
+    "wait-on": "^8.0.4"
+  }
+}
